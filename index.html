@@ -27,7 +27,7 @@ h1{font-size:clamp(42px,6vw,74px);line-height:.98;letter-spacing:-4px;margin:18p
 <nav class="nav"><div class="navin">
 <a class="logo" href="#">Deepak<span>Web</span>Studio</a>
 <div class="navlinks"><a href="#demos">Demos</a><a href="#why">Why us</a><a href="#contact">Contact</a></div>
-<a class="navcta" href="admin.html">Admin</a>
+<a class="navcta" id="navWA" href="#">WhatsApp</a>
 </div></nav>
 
 <header class="hero">
@@ -55,28 +55,16 @@ h1{font-size:clamp(42px,6vw,74px);line-height:.98;letter-spacing:-4px;margin:18p
 <footer class="footer" id="contact"><div class="footerin"><div><b>Deepak Web Studio</b><p>Modern websites for modern businesses.</p></div><div><b>Want this for your business?</b><p>Message us on WhatsApp and choose your demo.</p></div></div></footer>
 <a class="floatwa" id="floatWA" href="#" aria-label="WhatsApp">◔</a>
 
-<script>
-const defaults=[
-{id:1,title:"Luxe Hair Studio",category:"Salon",description:"Elegant salon website with services, gallery and booking CTA.",image:"https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=900&q=80",url:"#"},
-{id:2,title:"The Grand Stay",category:"Hotel",description:"Luxury hotel landing page with rooms, amenities and enquiry.",image:"https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80",url:"#"},
-{id:3,title:"Casa Verde",category:"Restaurant",description:"Premium restaurant showcase with menu and reservation CTA.",image:"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",url:"#"},
-{id:4,title:"CarePlus Clinic",category:"Doctor",description:"Clean healthcare website for doctors and clinics.",image:"https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=900&q=80",url:"#"},
-{id:5,title:"FitForge",category:"Gym",description:"Bold fitness website with programs, trainers and contact.",image:"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=80",url:"#"},
-{id:6,title:"Urban Realty",category:"Real Estate",description:"Modern property showcase with listings and enquiry.",image:"https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=80",url:"#"}
-];
-let demos=JSON.parse(localStorage.getItem("dws_demos")||"null")||defaults;
-let settings=JSON.parse(localStorage.getItem("dws_settings")||"null")||{phone:"9654885119",message:"Hi, I'm interested in a website demo. Please share the details."};
-const grid=document.getElementById("grid"),chips=document.getElementById("chips"),search=document.getElementById("search"),empty=document.getElementById("empty");
-function wa(msg){return "https://wa.me/"+settings.phone+"?text="+encodeURIComponent(msg||settings.message)}
-document.getElementById("floatWA").href=wa();document.getElementById("heroWA").href=wa("Hi, I want to discuss a website for my business.");
-function render(){
- const q=search.value.toLowerCase(), active=document.querySelector(".chip.active")?.dataset.cat||"All";
- const list=demos.filter(x=>(active==="All"||x.category===active)&&((x.title+" "+x.category+" "+x.description).toLowerCase().includes(q)));
- grid.innerHTML=list.map(x=>`<article class="card"><div class="thumb" style="background-image:url('${x.image}')"><span class="tag">${x.category}</span></div><div class="cardbody"><h3>${x.title}</h3><p>${x.description}</p><div class="cardactions"><a class="smallbtn demo" href="${x.url}" target="_blank">Live Demo ↗</a><a class="smallbtn wa" href="${wa("Hi, I'm interested in the "+x.title+" website demo.")}" target="_blank">WhatsApp</a></div></div></article>`).join("");
- empty.style.display=list.length?"none":"block";
-}
-function renderChips(){const cats=["All",...new Set(demos.map(x=>x.category))];chips.innerHTML=cats.map((c,i)=>`<button class="chip ${i===0?"active":""}" data-cat="${c}">${c}</button>`).join("");document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");render()})}
-search.oninput=render;renderChips();render();
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+const SUPABASE_URL="YOUR_SUPABASE_PROJECT_URL",SUPABASE_PUBLISHABLE_KEY="YOUR_SUPABASE_PUBLISHABLE_KEY";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const grid=document.getElementById("grid"),chips=document.getElementById("chips"),search=document.getElementById("search"),empty=document.getElementById("empty");let demos=[],settings={phone:"9654885119",message:"Hi, I'm interested in a website demo. Please share the details."};
+async function init(){const [d,s]=await Promise.all([sb.from("websites").select("*").eq("active",true).order("created_at"),sb.from("site_settings").select("key,value")]);if(d.error)return console.error(d.error);demos=d.data||[];settings={...settings,...Object.fromEntries((s.data||[]).map(x=>[x.key,x.value]))};document.getElementById("floatWA").href=wa();document.getElementById("heroWA").href=wa("Hi, I want to discuss a website for my business.");document.getElementById("navWA").href=wa();renderChips();render()}
+function wa(msg){return "https://wa.me/"+String(settings.phone||"9654885119").replace(/\D/g,"")+"?text="+encodeURIComponent(msg||settings.message)}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function render(){const q=search.value.toLowerCase(),active=document.querySelector(".chip.active")?.dataset.cat||"All";const list=demos.filter(x=>(active==="All"||x.category===active)&&((x.title+" "+x.category+" "+x.description).toLowerCase().includes(q)));grid.innerHTML=list.map(x=>`<article class="card"><div class="thumb" style="background-image:url('${esc(x.image)}')"><span class="tag">${esc(x.category)}</span></div><div class="cardbody"><h3>${esc(x.title)}</h3><p>${esc(x.description)}</p><div class="cardactions"><a class="smallbtn demo" href="${esc(x.url||"#")}" target="_blank">Live Demo ↗</a><a class="smallbtn wa" href="${wa("Hi, I'm interested in the "+x.title+" website demo.")}" target="_blank">WhatsApp</a></div></div></article>`).join("");empty.style.display=list.length?"none":"block"}
+function renderChips(){const cats=["All",...new Set(demos.map(x=>x.category))];chips.innerHTML=cats.map((c,i)=>`<button class="chip ${i===0?"active":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");render()})}
+search.oninput=render;init();
 </script>
 </body>
 </html>

@@ -1,0 +1,1 @@
+1) Run supabase_setup.sql in Supabase SQL Editor. 2) Authentication > Users > Add user: create your admin email/password. 3) In BOTH HTML files replace YOUR_SUPABASE_PROJECT_URL and YOUR_SUPABASE_PUBLISHABLE_KEY. 4) Upload files to GitHub. 5) Connect repo to Netlify.
